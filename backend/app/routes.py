@@ -1,7 +1,9 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, send_file
 from app.services.date_converter import DateConverter
 from app.services.synaxaire_service import SynaxaireService
 from app.services.document_generator import DocumentGenerator
+from flask_cors import cross_origin
+import io
 
 main = Blueprint('main', __name__)
 
@@ -13,43 +15,53 @@ def test():
     })
 
 @main.route('/api/generate-program', methods=['POST'])
+@cross_origin()
 def generate_program():
-    data = request.get_json()
-    
     try:
-        month = int(data.get('month'))
-        year = int(data.get('year'))
+        # Get data from request
+        data = request.get_json()
+        
+        # Log received data for debugging
+        print("Received data:", data)
+        
+        # Extract values
+        month = data.get('month')
+        year = data.get('year')
         french_verse = data.get('french_verse')
         arabic_verse = data.get('arabic_verse')
         
-        # Get dates with Synaxaire entries
-        dates = DateConverter.get_month_dates_with_synaxaire(year, month)
-        
+        # Validate required fields
+        if not all([month, year, french_verse, arabic_verse]):
+            return jsonify({
+                'error': 'Missing required fields'
+            }), 400
+            
         # Generate document
         doc_generator = DocumentGenerator()
         doc_bytes = doc_generator.generate(
             year=year,
             month=month,
-            dates=dates,
+            dates=[],  # You can add actual dates later
             french_verse=french_verse,
             arabic_verse=arabic_verse
         )
         
-        # Return document
-        doc_buffer = BytesIO(doc_bytes)
-        doc_buffer.seek(0)
+        # Create in-memory file
+        doc_io = io.BytesIO(doc_bytes)
+        doc_io.seek(0)
         
+        # Return the file
         return send_file(
-            doc_buffer,
+            doc_io,
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             as_attachment=True,
             download_name=f'program_{year}_{month}.docx'
         )
         
     except Exception as e:
+        print("Error:", str(e))  # Log the error
         return jsonify({
-            'status': 'error',
-            'message': str(e)
+            'error': str(e)
         }), 500
 
 # Add new endpoint to fetch Synaxaire entries
