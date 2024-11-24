@@ -3,57 +3,61 @@ from datetime import datetime, date
 from app.services.synaxaire_service import SynaxaireService
 
 class DateConverter:
-    @staticmethod
-    def gregorian_to_coptic(gregorian_date: date) -> tuple:
+    def __init__(self):
+        self.synaxaire_service = SynaxaireService()
+
+    def get_month_dates_with_synaxaire(self, year: int, month: int) -> list:
         """
-        Convert Gregorian date to Coptic date
-        Returns: tuple (year, month, day)
+        Get all dates in a month that have Synaxaire entries
+        
+        Parameters:
+        -----------
+        year : int
+            Gregorian year
+        month : int
+            Gregorian month (1-12)
+            
+        Returns:
+        --------
+        list
+            List of dictionaries containing dates and their Synaxaire entries
         """
-        return coptic.from_gregorian(
-            gregorian_date.year,
-            gregorian_date.month,
-            gregorian_date.day
-        )
-    
-    @staticmethod
-    def get_month_dates(year: int, month: int) -> list:
-        """
-        Get all dates for a given month with their Coptic equivalents
-        """
-        start_date = date(year, month, 1)
-        if month == 12:
-            end_year = year + 1
-            end_month = 1
+        dates_with_entries = []
+        
+        # Get the number of days in the month
+        if month == 2:
+            days_in_month = 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28
+        elif month in [4, 6, 9, 11]:
+            days_in_month = 30
         else:
-            end_year = year
-            end_month = month + 1
+            days_in_month = 31
             
-        end_date = date(end_year, end_month, 1)
+        # Check each day of the month
+        for day in range(1, days_in_month + 1):
+            # Convert to Coptic date
+            coptic_date = coptic.from_gregorian(year, month, day)
+            coptic_month, coptic_day = coptic_date[1], coptic_date[2]
+            
+            # Get Synaxaire entries for this date
+            entries = self.synaxaire_service.get_entries_for_date(coptic_month, coptic_day)
+            
+            if entries:
+                formatted_entries = self.synaxaire_service.format_entries(entries)
+                
+                # Create event strings for each category
+                events = []
+                if formatted_entries["martyrs"]:
+                    events.append("Martyrs: " + "; ".join(formatted_entries["martyrs"]))
+                if formatted_entries["saints"]:
+                    events.append("Saints: " + "; ".join(formatted_entries["saints"]))
+                if formatted_entries["commemorations"]:
+                    events.append("Commémorations: " + "; ".join(formatted_entries["commemorations"]))
+                if formatted_entries["other"]:
+                    events.append("Autres: " + "; ".join(formatted_entries["other"]))
+                
+                dates_with_entries.append({
+                    'date': f"{day}/{month}/{year}",
+                    'event': "\n".join(events)
+                })
         
-        dates = []
-        current_date = start_date
-        while current_date < end_date:
-            coptic_date = DateConverter.gregorian_to_coptic(current_date)
-            dates.append({
-                'gregorian': current_date,
-                'coptic': coptic_date
-            })
-            current_date = date.fromordinal(current_date.toordinal() + 1)
-            
-        return dates 
-    
-    @staticmethod
-    def get_month_dates_with_synaxaire(year: int, month: int) -> list:
-        """Get all dates for a given month with their Coptic equivalents and Synaxaire entries"""
-        dates = DateConverter.get_month_dates(year, month)
-        synaxaire_service = SynaxaireService()
-        
-        for date_entry in dates:
-            coptic_date = date_entry['coptic']
-            synaxaire_entry = synaxaire_service.get_entries_for_date(
-                coptic_date[1],  # month
-                coptic_date[2]   # day
-            )
-            date_entry['synaxaire'] = synaxaire_service.format_entry(synaxaire_entry)
-            
-        return dates
+        return dates_with_entries

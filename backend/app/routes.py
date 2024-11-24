@@ -4,6 +4,7 @@ from app.services.synaxaire_service import SynaxaireService
 from app.services.document_generator import DocumentGenerator
 from flask_cors import cross_origin
 import io
+import logging
 
 main = Blueprint('main', __name__)
 
@@ -18,50 +19,64 @@ def test():
 @cross_origin()
 def generate_program():
     try:
-        # Get data from request
-        data = request.get_json()
+        # Log that we received a request
+        print("Received request to generate program")
         
-        # Log received data for debugging
+        # Get and log the request data
+        data = request.get_json()
         print("Received data:", data)
         
-        # Extract values
-        month = data.get('month')
-        year = data.get('year')
-        french_verse = data.get('french_verse')
-        arabic_verse = data.get('arabic_verse')
-        
         # Validate required fields
-        if not all([month, year, french_verse, arabic_verse]):
-            return jsonify({
-                'error': 'Missing required fields'
-            }), 400
+        required_fields = ['month', 'year', 'french_verse', 'arabic_verse']
+        for field in required_fields:
+            if field not in data:
+                raise ValueError(f"Missing required field: {field}")
+        
+        # Convert the data
+        try:
+            month = int(data['month'])
+            year = int(data['year'])
+        except ValueError as e:
+            raise ValueError(f"Invalid month or year format: {str(e)}")
             
-        # Generate document
-        doc_generator = DocumentGenerator()
-        doc_bytes = doc_generator.generate(
-            year=year,
-            month=month,
-            dates=[],  # You can add actual dates later
-            french_verse=french_verse,
-            arabic_verse=arabic_verse
-        )
+        if not (1 <= month <= 12):
+            raise ValueError(f"Month must be between 1 and 12, got {month}")
+            
+        # Get dates with synaxaire entries
+        try:
+            date_converter = DateConverter()
+            dates_with_entries = date_converter.get_month_dates_with_synaxaire(year, month)
+        except Exception as e:
+            raise Exception(f"Error getting synaxaire entries: {str(e)}")
         
-        # Create in-memory file
-        doc_io = io.BytesIO(doc_bytes)
-        doc_io.seek(0)
+        # Generate the document
+        try:
+            doc_generator = DocumentGenerator()
+            doc_bytes = doc_generator.generate(
+                year=year,
+                month=month,
+                dates=dates_with_entries,
+                french_verse=data['french_verse'],
+                arabic_verse=data['arabic_verse']
+            )
+        except Exception as e:
+            raise Exception(f"Error generating document: {str(e)}")
         
-        # Return the file
+        # Return the document as a downloadable file
         return send_file(
-            doc_io,
+            io.BytesIO(doc_bytes),
             mimetype='application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             as_attachment=True,
-            download_name=f'program_{year}_{month}.docx'
+            download_name=f'program_{month}_{year}.docx'
         )
         
     except Exception as e:
-        print("Error:", str(e))  # Log the error
+        print("Error occurred:", str(e))
+        import traceback
+        traceback.print_exc()  # This will print the full stack trace
         return jsonify({
-            'error': str(e)
+            "error": str(e),
+            "traceback": traceback.format_exc()
         }), 500
 
 # Add new endpoint to fetch Synaxaire entries

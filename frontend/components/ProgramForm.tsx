@@ -44,39 +44,51 @@ export default function ProgramForm() {
       
       const formData = {
         month: parseInt(selectedMonth) + 1,
-        year: data.year,
+        year: parseInt(data.year),
         french_verse: data.frenchVerse,
         arabic_verse: data.arabicVerse
       };
 
       console.log('Submitting form with data:', formData);
 
-      const response = await fetch('http://localhost:5000/api/generate-program', {
+      const response = await fetch('http://localhost:5001/api/generate-program', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         },
         body: JSON.stringify(formData),
-        credentials: 'include'
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Server error:', errorData);
         throw new Error(errorData.error || 'Failed to generate program');
       }
 
+      // Get the blob from the response
       const blob = await response.blob();
+      
+      // Create a download link
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `program_${data.year}_${parseInt(selectedMonth) + 1}.docx`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `program_${formData.month}_${formData.year}.docx`;
+      
+      // Trigger the download
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
       window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      console.log('Program generated and downloaded successfully');
 
     } catch (error) {
       console.error('Error generating program:', error);
+      // You might want to add some UI feedback here
+      alert(`Error generating program: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
