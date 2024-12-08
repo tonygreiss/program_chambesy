@@ -1,13 +1,13 @@
 [phases.setup]
-nixPkgs = ["python39", "gcc"]
+nixPkgs = ["python39"]
 aptPkgs = ["python3-dev", "build-essential"]
 
 [phases.install]
 cmds = [
-    "python -m pip install --upgrade pip",
+    "pip install --upgrade pip",
     "pip install -r requirements.txt",
     "pip install gunicorn"
 ]
 
 [start]
-cmd = "gunicorn --bind 0.0.0.0:$PORT 'app:create_app()'" 
+cmd = "gunicorn 'app:create_app()' --bind 0.0.0.0:$PORT" 
