@@ -1,18 +1,24 @@
 [phases.setup]
-nixPkgs = ['python39', 'nodejs@18', 'gcc']
-aptPkgs = ['python3-pip']
+nixPkgs = [
+    "python39",
+    "nodejs@18",
+    "gcc",
+    "python3-pip"
+]
+aptPkgs = ["python3-dev", "build-essential"]
 
 [phases.install]
 cmds = [
-    'cd frontend && npm ci',
-    'cd ../backend && pip install -r requirements.txt'
+    "cd frontend && npm ci",
+    "cd ../backend && python -m pip install --upgrade pip",
+    "cd ../backend && pip install -r requirements.txt"
 ]
 
 [phases.build]
 cmds = [
-    'cd frontend && npm run build',
-    'cd ../backend && python -m pip install gunicorn'
+    "cd frontend && npm run build",
+    "cd ../backend && python -m pip install gunicorn"
 ]
 
 [start]
-cmd = 'cd backend && gunicorn --bind 0.0.0.0:$PORT app:create_app()' 
+cmd = "cd backend && gunicorn --bind 0.0.0.0:$PORT 'app:create_app()'" 
