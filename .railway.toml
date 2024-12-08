@@ -1,16 +1,13 @@
 [build]
 builder = "nixpacks"
+buildCommand = "cd frontend && npm ci && npm run build"
 
-[[services]]
-name = "frontend"
-directory = "frontend"
-start_command = "cd frontend && npm run start"
-healthcheck_path = "/"
-port = 3000
+[deploy]
+startCommand = "cd backend && python run.py"
+healthcheckPath = "/api/test"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
 
 [[services]]
 name = "backend"
-directory = "backend"
-start_command = "cd backend && python run.py"
-healthcheck_path = "/api/test"
-port = "PORT" 
+directory = "backend" 
