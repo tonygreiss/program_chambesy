@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "nixpacks build . --name app"
+dockerfilePath = "backend/Dockerfile"
+buildCommand = "cd backend && nixpacks build ."
 
 [deploy]
 startCommand = "cd backend && gunicorn --bind 0.0.0.0:$PORT 'app:create_app()'"
@@ -10,4 +11,3 @@ healthcheckTimeout = 100
 
 [deploy.variables]
 PYTHON_VERSION = "3.9"
-NODE_VERSION = "18" 
