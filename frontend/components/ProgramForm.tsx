@@ -34,6 +34,8 @@ export default function ProgramForm() {
 
   const currentYear = new Date().getFullYear()
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
   const onSubmit = async (data: ProgramFormData) => {
     if (!selectedMonth) {
       return;
@@ -51,14 +53,7 @@ export default function ProgramForm() {
 
       console.log('Submitting form with data:', formData);
 
-      const response = await fetch('http://localhost:5001/api/generate-program', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await fetch(`${API_URL}/api/test`);
 
       if (!response.ok) {
         const errorData = await response.json();

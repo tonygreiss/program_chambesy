@@ -1,0 +1,16 @@
+[build]
+builder = "nixpacks"
+
+[[services]]
+name = "frontend"
+directory = "frontend"
+start_command = "cd frontend && npm run start"
+healthcheck_path = "/"
+port = 3000
+
+[[services]]
+name = "backend"
+directory = "backend"
+start_command = "cd backend && python run.py"
+healthcheck_path = "/api/test"
+port = "PORT" 
