@@ -1,13 +1,13 @@
 [build]
 builder = "nixpacks"
-buildCommand = "cd frontend && npm ci && npm run build"
+buildCommand = "nixpacks build . --name app"
 
 [deploy]
-startCommand = "cd backend && python run.py"
+startCommand = "cd backend && gunicorn --bind 0.0.0.0:$PORT 'app:create_app()'"
+restartPolicyType = "on_failure"
 healthcheckPath = "/api/test"
 healthcheckTimeout = 100
-restartPolicyType = "on_failure"
 
-[[services]]
-name = "backend"
-directory = "backend" 
+[deploy.variables]
+PYTHON_VERSION = "3.9"
+NODE_VERSION = "18" 
