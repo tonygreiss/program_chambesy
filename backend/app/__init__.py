@@ -9,8 +9,4 @@ def create_app():
     CORS(app, origins=[os.environ.get('FRONTEND_URL', 'http://localhost:3000')], 
          supports_credentials=True)
     
-    # Register blueprints
-    from app.routes import main
-    app.register_blueprint(main)
-    
-    return app 
+    return app
