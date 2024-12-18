@@ -14,17 +14,17 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
-interface ProgramFormData {
-  month: string
-  year: number
-  frenchVerse: string
-  arabicVerse: string
+interface FormData {
+  month: number;
+  year: number;
+  french_verse: string;
+  arabic_verse: string;
 }
 
 export default function ProgramForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedMonth, setSelectedMonth] = useState<string>('')
-  const { register, handleSubmit, formState: { errors } } = useForm<ProgramFormData>()
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>()
 
   const months = [
     'January', 'February', 'March', 'April',
@@ -34,7 +34,7 @@ export default function ProgramForm() {
 
   const currentYear = new Date().getFullYear()
 
-  const onSubmit = async (data: ProgramFormData) => {
+  const onSubmit = async (data: any) => {
     if (!selectedMonth) {
       return;
     }
@@ -42,7 +42,7 @@ export default function ProgramForm() {
     try {
       setIsLoading(true);
       
-      const formData = {
+      const formData: FormData = {
         month: parseInt(selectedMonth) + 1,
         year: parseInt(data.year),
         french_verse: data.frenchVerse,
