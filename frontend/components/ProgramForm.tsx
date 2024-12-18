@@ -51,7 +51,7 @@ export default function ProgramForm() {
 
       console.log('Submitting form with data:', formData);
 
-      const response = await fetch('http://localhost:5001/api/generate-program', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/generate-program`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
