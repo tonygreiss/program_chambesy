@@ -6,7 +6,24 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-const AlertDialog = AlertDialogPrimitive.Root
+// Remove the unused children prop from the interface
+interface AlertDialogProps {
+  // Remove 'children' if not used
+  title: string;
+  description: string;
+  // ... other props
+}
+
+// Or use children in the component if needed
+export function AlertDialog({ children, title, description }: AlertDialogProps) {
+  return (
+    <div>
+      {title}
+      {description}
+      {children} {/* Use children here */}
+    </div>
+  );
+}
 
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger
 
